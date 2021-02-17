@@ -1,0 +1,25 @@
+{
+  "name": "node-red-contrib-function",
+  "version": "1.0.0",
+  "description": "get data from node-red",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ./test/node.test.js"
+  },
+  "dependencies": {
+    "vm2": "^3.0.2"
+  },
+  "devDependencies": {
+    "node-red": "1.2.9",
+    "node-red-node-test-helper": "^0.2.7",
+    "should": "^13.2.3",
+    "zora": "^4.0.2"
+  },
+  "author": "",
+  "license": "ISC",
+  "node-red": {
+    "nodes": {
+      "fast_stat": "./src/index.js"
+    }
+  }
+}
