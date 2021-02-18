@@ -46,13 +46,10 @@ it adds a log to the cloneMessage function
 
 ## Todo
 
-### Planned fix
-
-* Reusing Node-Red trads
-
 ### Planned feature
 
 Other alternative implementations using :
 
 1. [isolated-vm](https://github.com/laverdet/isolated-vm)
 1. Plain function (lowest security, highest performance) (already exists here : https://github.com/ozomer/node-red-contrib-unsafe-function)
+1. Reusing Node-Red trads (pulling them with a script ?)
