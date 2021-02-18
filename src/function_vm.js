@@ -16,64 +16,24 @@
 
 module.exports = function(RED) {
     const util = require("util");
-    const vm = require("vm2");
-    // const vm = require("vm");
+    const vm = require("vm");
     "use strict";
 
-    function sendResults(node,send,_msgid,msgs,cloneFirstMessage) {
-        if (msgs == null) {
-            return;
-        } else if (!util.isArray(msgs)) {
-            msgs = [msgs];
-        }
-        var msgCount = 0;
-        for (var m=0; m<msgs.length; m++) {
-            if (msgs[m]) {
-                if (!util.isArray(msgs[m])) {
-                    msgs[m] = [msgs[m]];
-                }
-                for (var n=0; n < msgs[m].length; n++) {
-                    var msg = msgs[m][n];
-                    if (msg !== null && msg !== undefined) {
-                        if (typeof msg === 'object' && !Buffer.isBuffer(msg) && !util.isArray(msg)) {
-                            if (msgCount === 0 && cloneFirstMessage !== false) {
-                                msgs[m][n] = RED.util.cloneMessage(msgs[m][n]);
-                                msg = msgs[m][n];
-                            }
-                            msg._msgid = _msgid;
-                            msgCount++;
-                        } else {
-                            var type = typeof msg;
-                            if (type === 'object') {
-                                type = Buffer.isBuffer(msg)?'Buffer':(util.isArray(msg)?'Array':'Date');
-                            }
-                            node.error(RED._("function.error.non-message-returned",{ type: type }));
-                        }
-                    }
-                }
-            }
-        }
-        if (msgCount>0) {
-            send(msgs);
-        }
-    }
+    const common = require('./common');
+    common.init(RED);
+    const sendResults = common.sendResults;
+    const updateErrorInfo = common.updateErrorInfo;
 
-    function updateErrorInfo(err) {
-        if (err.stack) {
-            var stack = err.stack.toString();
-            var m = /^([^:]+):([^:]+):(\d+).*/.exec(stack);
-            if (m) {
-                var line = parseInt(m[3]) -1;
-                var kind = "body:";
-                if (/setup/.exec(m[1])) {
-                    kind = "setup:";
-                }
-                if (/cleanup/.exec(m[1])) {
-                    kind = "cleanup:";
-                }
-                err.message += " ("+kind+"line "+line+")";
-            }
-        }
+    function createVMOpt(node, kind) {
+        var opt = {
+            filename: 'Function node'+kind+':'+node.id+(node.name?' ['+node.name+']':''), // filename for stack traces
+            displayErrors: true
+            // Using the following options causes node 4/6 to not include the line number
+            // in the stack output. So don't use them.
+            // lineOffset: -11, // line number offset to be used for stack traces
+            // columnOffset: 0, // column number offset to be used for stack traces
+        };
+        return opt;
     }
 
     function FunctionNode(n) {
@@ -94,25 +54,11 @@ module.exports = function(RED) {
         }
 
         const functionText = 
-`
-const global = _global;
-const node = {
-    id:__node__.id,
-    name:__node__.name,
-    log:__node__.log,
-    error:__node__.error,
-    warn:__node__.warn,
-    debug:__node__.debug,
-    trace:__node__.trace,
-    on:__node__.on,
-    status:__node__.status
-}
-return async function (msg,__send__,__done__) {
-    node.send = function(msgs,cloneMsg){ __node__.send(__send__,__msgid__,msgs,cloneMsg);};
-    node.done = __done__;
+`var results = async (msg,send,done) => {
+    node.send = function(msgs,cloneMsg){ node._send(send,msg._msgid,msgs,cloneMsg);};
+    node.done = done;
     ${node.func}
-}
-`;
+}`;
         var finScript = null;
         var finOpt = null;
         node.topic = n.topic;
@@ -120,7 +66,7 @@ return async function (msg,__send__,__done__) {
         node.outstandingIntervals = [];
         node.clearStatus = false;
 
-        let context = {
+        const sandbox = {
             console:console,
             util:util,
             Buffer:Buffer,
@@ -128,7 +74,7 @@ return async function (msg,__send__,__done__) {
             RED: {
                 util: {... RED.util}
             },
-            __node__: {
+            node: {
                 id: node.id,
                 name: node.name,
                 log: function() {
@@ -146,7 +92,7 @@ return async function (msg,__send__,__done__) {
                 trace: function() {
                     node.trace.apply(node, arguments);
                 },
-                send: function(send, id, msgs, cloneMsg) {
+                _send: function(send, id, msgs, cloneMsg) {
                     sendResults(node, send, id, msgs, cloneMsg);
                 },
                 on: function() {
@@ -188,8 +134,7 @@ return async function (msg,__send__,__done__) {
                     return node.context().flow.keys.apply(node,arguments);
                 }
             },
-            // hack because vm2 hates global
-            _global: {
+            global: {
                 set: function() {
                     node.context().global.set.apply(node,arguments);
                 },
@@ -210,7 +155,7 @@ return async function (msg,__send__,__done__) {
                 var func = arguments[0];
                 var timerId;
                 arguments[0] = function() {
-                    context.clearTimeout(timerId);
+                    sandbox.clearTimeout(timerId);
                     try {
                         func.apply(node,arguments);
                     } catch(err) {
@@ -251,62 +196,54 @@ return async function (msg,__send__,__done__) {
             }
         };
         if (util.hasOwnProperty('promisify')) {
-            context.setTimeout[util.promisify.custom] = function(after, value) {
+            sandbox.setTimeout[util.promisify.custom] = function(after, value) {
                 return new Promise(function(resolve, reject) {
-                    context.setTimeout(function(){ resolve(value); }, after);
+                    sandbox.setTimeout(function(){ resolve(value); }, after);
                 });
             };
-            context.promisify = util.promisify;
+            sandbox.promisify = util.promisify;
         }
+        const context = vm.createContext(sandbox);
         try {
-            const instanceVM = new vm.NodeVM({
-                sandbox: context,
-                wrapper: "none"
-            });
             var iniScript = null;
             var iniOpt = null;
             if (node.ini) {
                 var iniText = `
                     (async function() {
-                        const global = _global;
-                        var node = {
-                            id:__node__.id,
-                            name:__node__.name,
-                            log:__node__.log,
-                            error:__node__.error,
-                            warn:__node__.warn,
-                            debug:__node__.debug,
-                            trace:__node__.trace,
-                            status:__node__.status,
-                            send: function(msgs, cloneMsg) {
-                                __node__.send(__send__, RED.util.generateId(), msgs, cloneMsg);
-                            }
-                        };
+                        node.send = function(msgs,cloneMsg){ node._send(__send__, RED.util.generateId(), msgs, cloneMsg); };
                         `+ node.ini +`
                     })();`;
-                iniScript = new vm.VMScript(iniText);
+                iniOpt = createVMOpt(node, " setup");
+                iniScript = new vm.Script(iniText, iniOpt);
             }
             
-            node.script = new vm.VMScript(functionText);
-            const functionProcess = instanceVM.run(node.script);
+            node.script = new vm.Script(functionText, createVMOpt(node, ""));
+            let functionProcess;
+            try {
+                node.script.runInContext(context);
+                functionProcess = context.results;
+            } catch (e) {
+                console.log(functionText);
+                console.error(e);
+            }
 
             if (node.fin) {
                 var finText = "(function () {\n"+
-                "const global = _global;\n"+
                 node.fin +
                 "\n})();";
-                finScript = new vm.VMScript(finText);
+                finOpt = createVMOpt(node, " cleanup");
+                finScript = new vm.Script(finText, finOpt);
             }
             var promise = Promise.resolve();
             
             if (iniScript) {
-                instanceVM.setGlobal('__send__', function(msgs) { node.send(msgs); });
-                promise.then(() => instanceVM.run(iniScript))
+                context.__send__ = function(msgs) { node.send(msgs); };
+                promise = iniScript.runInContext(context);
             }
 
             function processMessage(msg, send, done) {
                 var start = process.hrtime();
-
+                
                 functionProcess(msg,send,done).then(function(results) {
                     sendResults(node,send,msg._msgid,results,false);
                     if (handleNodeDoneCall) {
@@ -320,35 +257,23 @@ return async function (msg,__send__,__done__) {
                         node.status({fill:"yellow",shape:"dot",text:""+converted});
                     }
                 }).catch(err => {
-                    if ((typeof err === "object") && err.hasOwnProperty("stack")) {
+                    if (err && err.stack) {
                         //remove unwanted part
-                        var index = err.stack.search(/\n\s*at ContextifyScript.Script.runInContext/);
-                        err.stack = err.stack.slice(0, index).split('\n').slice(0,-1).join('\n');
-                        var stack = err.stack.split(/\r?\n/);
-
-                        //store the error in msg to be used in flows
-                        msg.error = err;
-
-                        var line = 0;
-                        var errorMessage;
-                        if (stack.length > 0) {
-                            while (line < stack.length && stack[line].indexOf("ReferenceError") !== 0) {
-                                line++;
+                        const stacks = err.stack.split('\n');
+                        let errorData = [];
+                        stacks.forEach(rawline => {
+                            line = rawline.trim();
+                            if (line.indexOf('results') === -1) {
+                                return;
                             }
+                            errorData = line.split(':');
+                        });
+                        console.log(errorData);
+                        // Offset due to code
+                        const lineNumber = errorData[errorData.length-2] - 3;
+                        const charNumber = errorData[errorData.length-1].slice(0,-1);
+                        errorMessage = `${stacks[0]} (line ${lineNumber}, col ${charNumber})`;
 
-                            if (line < stack.length) {
-                                errorMessage = stack[line];
-                                var m = /:(\d+):(\d+)$/.exec(stack[line+1]);
-                                if (m) {
-                                    var lineno = Number(m[1])-16;
-                                    var cha = m[2];
-                                    errorMessage += " (line "+lineno+", col "+cha+")";
-                                }
-                            }
-                        }
-                        if (!errorMessage) {
-                            errorMessage = err.toString();
-                        }
                         done(errorMessage);
                     }
                     else if (typeof err === "string") {
@@ -377,7 +302,7 @@ return async function (msg,__send__,__done__) {
             node.on("close", function() {
                 if (finScript) {
                     try {
-                        instanceVM.run(finScript);
+                        finScript.runInContext(context);
                     }
                     catch (err) {
                         node.error(err);
@@ -419,6 +344,6 @@ return async function (msg,__send__,__done__) {
             node.error(err);
         }
     }
-    RED.nodes.registerType("function2",FunctionNode);
+    RED.nodes.registerType("function_vm",FunctionNode);
 };
 

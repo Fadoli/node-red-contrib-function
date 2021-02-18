@@ -4,7 +4,7 @@
   "description": "get data from node-red",
   "main": "index.js",
   "scripts": {
-    "test": "node ./test/node.test.js"
+    "test": "node ./test/index.js"
   },
   "dependencies": {
     "vm2": "^3.0.2"
@@ -19,7 +19,8 @@
   "license": "ISC",
   "node-red": {
     "nodes": {
-      "fast_stat": "./src/index.js"
+      "function_vm2": "./src/function_vm2.js",
+      "function_vm": "./src/function_vm.js"
     }
   }
 }
