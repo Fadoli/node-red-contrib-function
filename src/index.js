@@ -58,18 +58,6 @@ module.exports = function(RED) {
         }
     }
 
-    function createVMOpt(node, kind) {
-        var opt = {
-            filename: 'Function node'+kind+':'+node.id+(node.name?' ['+node.name+']':''), // filename for stack traces
-            displayErrors: true
-            // Using the following options causes node 4/6 to not include the line number
-            // in the stack output. So don't use them.
-            // lineOffset: -11, // line number offset to be used for stack traces
-            // columnOffset: 0, // column number offset to be used for stack traces
-        };
-        return opt;
-    }
-
     function updateErrorInfo(err) {
         if (err.stack) {
             var stack = err.stack.toString();
@@ -105,24 +93,26 @@ module.exports = function(RED) {
             handleNodeDoneCall = false;
         }
 
-        var functionText = "(async function(msg,__send__,__done__){ "+
-                              "const global = _global;"+
-                              "var __msgid__ = msg._msgid;"+
-                              "var node = {"+
-                                 "id:__node__.id,"+
-                                 "name:__node__.name,"+
-                                 "log:__node__.log,"+
-                                 "error:__node__.error,"+
-                                 "warn:__node__.warn,"+
-                                 "debug:__node__.debug,"+
-                                 "trace:__node__.trace,"+
-                                 "on:__node__.on,"+
-                                 "status:__node__.status,"+
-                                 "send:function(msgs,cloneMsg){ __node__.send(__send__,__msgid__,msgs,cloneMsg);},"+
-                                 "done:__done__"+
-                              "};\n"+
-                              node.func+"\n"+
-                           "})(msg,__send__,__done__);";
+        const functionText = 
+`
+const global = _global;
+const node = {
+    id:__node__.id,
+    name:__node__.name,
+    log:__node__.log,
+    error:__node__.error,
+    warn:__node__.warn,
+    debug:__node__.debug,
+    trace:__node__.trace,
+    on:__node__.on,
+    status:__node__.status
+}
+return async function (msg,__send__,__done__) {
+    node.send = function(msgs,cloneMsg){ __node__.send(__send__,__msgid__,msgs,cloneMsg);};
+    node.done = __done__;
+    ${node.func}
+}
+`;
         var finScript = null;
         var finOpt = null;
         node.topic = n.topic;
@@ -269,8 +259,9 @@ module.exports = function(RED) {
             context.promisify = util.promisify;
         }
         try {
-            const instanceVM = new vm.VM({
-                sandbox: context
+            const instanceVM = new vm.NodeVM({
+                sandbox: context,
+                wrapper: "none"
             });
             var iniScript = null;
             var iniOpt = null;
@@ -297,6 +288,7 @@ module.exports = function(RED) {
             }
             
             node.script = new vm.VMScript(functionText);
+            const functionProcess = instanceVM.run(node.script);
 
             if (node.fin) {
                 var finText = "(function () {\n"+
@@ -309,17 +301,13 @@ module.exports = function(RED) {
             
             if (iniScript) {
                 instanceVM.setGlobal('__send__', function(msgs) { node.send(msgs); });
-                promise = instanceVM.run(iniScript)
+                promise.then(() => instanceVM.run(iniScript))
             }
 
             function processMessage(msg, send, done) {
                 var start = process.hrtime();
-                instanceVM.setGlobal('msg', msg);
-                instanceVM.setGlobal('__send__', send);
-                instanceVM.setGlobal('__done__', done);
 
-                let out = instanceVM.run(node.script);
-                out.then(function(results) {
+                functionProcess(msg,send,done).then(function(results) {
                     sendResults(node,send,msg._msgid,results,false);
                     if (handleNodeDoneCall) {
                         done();
@@ -352,7 +340,7 @@ module.exports = function(RED) {
                                 errorMessage = stack[line];
                                 var m = /:(\d+):(\d+)$/.exec(stack[line+1]);
                                 if (m) {
-                                    var lineno = Number(m[1])-1;
+                                    var lineno = Number(m[1])-16;
                                     var cha = m[2];
                                     errorMessage += " (line "+lineno+", col "+cha+")";
                                 }
@@ -431,7 +419,6 @@ module.exports = function(RED) {
             node.error(err);
         }
     }
-    RED.nodes.registerType("function",FunctionNode);
-    RED.library.register("functions");
+    RED.nodes.registerType("function2",FunctionNode);
 };
 
