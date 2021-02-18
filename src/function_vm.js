@@ -218,14 +218,8 @@ module.exports = function(RED) {
             }
             
             node.script = new vm.Script(functionText, createVMOpt(node, ""));
-            let functionProcess;
-            try {
-                node.script.runInContext(context);
-                functionProcess = context.results;
-            } catch (e) {
-                console.log(functionText);
-                console.error(e);
-            }
+            node.script.runInContext(context);
+            const functionProcess = context.results;
 
             if (node.fin) {
                 var finText = "(function () {\n"+
@@ -268,7 +262,7 @@ module.exports = function(RED) {
                             }
                             errorData = line.split(':');
                         });
-                        console.log(errorData);
+                        
                         // Offset due to code
                         const lineNumber = errorData[errorData.length-2] - 3;
                         const charNumber = errorData[errorData.length-1].slice(0,-1);

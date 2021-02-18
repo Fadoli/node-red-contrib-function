@@ -1,43 +1,21 @@
 const helper = require('node-red-node-test-helper');
-const test = require("zora").test;
 const should = require('should');
 const node = require('../src/function_vm');
 
-const TIMEOUT = 750;
+describe('function_vm node', () => {
+    before(function(done) {
+        helper.startServer(done);
+    });
 
-test('function_vm node', async(t) => {
-    async function it(title, func) {
-        return t.test(title, async () => {
-            let res;
-            const prom = new Promise((_res,_rej) => {
-                res = _res;
-            })
-            let timer = setTimeout(() => {
-                internalFunc(new Error(`timed out for ${TIMEOUT} ms`));
-            }, TIMEOUT);
-            const internalFunc = (error) => {
-                clearTimeout(timer);
-                if (error) {
-                    t.fail(error);
-                    res();
-                } else {
-                    t.truthy(title);
-                    res();
-                }
-            }
-            const result = func(internalFunc);
-            if (result && result.then) {
-                internalFunc();
-                return func();
-            } else {
-                return prom;
-            }
-        }).then(() => {
-            return helper.unload();
-        })
-    }
+    after(function(done) {
+        helper.stopServer(done);
+    });
 
-    await it('should be loaded', function(done) {
+    afterEach(() => {
+        return helper.unload();
+    })
+
+    it('should be loaded', function(done) {
         var flow = [{id:"n1", type:"function_vm", name: "function" }];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -47,7 +25,7 @@ test('function_vm node', async(t) => {
     });
     
     /*
-    await it('should do something with the catch node', function(done) {
+    it('should do something with the catch node', function(done) {
         var flow = [{"id":"funcNode","type":"function_vm","wires":[["goodNode"]],"func":"node.error('This is an error', msg);"},{"id":"goodNode","type":"helper"},{"id":"badNode","type":"helper"},{"id":"catchNode","type":"catch","scope":null,"uncaught":false,"wires":[["badNode"]]}];
         var catchNodeModule = require("nr-test-utils").require("@node-red/nodes/core/common/25-catch.js")
         helper.load([catchNodeModule, node], flow, function() {
@@ -70,7 +48,7 @@ test('function_vm node', async(t) => {
     });
     */
    
-    await it('should send returned message', function(done) {
+    it('should send returned message', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -85,7 +63,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should send returned message using send()', function(done) {
+    it('should send returned message using send()', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"node.send(msg);"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -119,10 +97,10 @@ test('function_vm node', async(t) => {
             n1.receive(origMessage);
         });
     }
-    await it('should clone single message sent using send()', function(done) {
+    it('should clone single message sent using send()', function(done) {
         testSendCloning("msg",done);
     });
-    await it('should not clone single message sent using send(,false)', function(done) {
+    it('should not clone single message sent using send(,false)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"node.send(msg,false); msg.payload = 'changed';"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -137,20 +115,20 @@ test('function_vm node', async(t) => {
             n1.receive(origMessage);
         });
     });
-    await it('should clone first message sent using send() - array 1', function(done) {
+    it('should clone first message sent using send() - array 1', function(done) {
         testSendCloning("[msg]",done);
     });
-    await it('should clone first message sent using send() - array 2', function(done) {
+    it('should clone first message sent using send() - array 2', function(done) {
         testSendCloning("[[msg],[null]]",done);
     });
-    await it('should clone first message sent using send() - array 3', function(done) {
+    it('should clone first message sent using send() - array 3', function(done) {
         testSendCloning("[null,msg]",done);
     });
-    await it('should clone first message sent using send() - array 3', function(done) {
+    it('should clone first message sent using send() - array 3', function(done) {
         testSendCloning("[null,[msg]]",done);
     });
 
-    await it('should pass through _topic', function(done) {
+    it('should pass through _topic', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -166,7 +144,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should send to multiple outputs', function(done) {
+    it('should send to multiple outputs', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"],["n3"]],
         func:"return [{payload: '1'},{payload: '2'}];"},
         {id:"n2", type:"helper"}, {id:"n3", type:"helper"} ];
@@ -193,7 +171,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should send to multiple messages', function(done) {
+    it('should send to multiple messages', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],
         func:"return [[{payload: 1},{payload: 2}]];"},
         {id:"n2", type:"helper"} ];
@@ -217,7 +195,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should allow input to be discarded by returning null', function(done) {
+    it('should allow input to be discarded by returning null', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"return null"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -233,7 +211,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should handle null amongst valid messages', function(done) {
+    it('should handle null amongst valid messages', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"return [[msg,null,msg],null]"},
         {id:"n2", type:"helper"},
         {id:"n3", type:"helper"}];
@@ -263,7 +241,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get keys in global context', function(done) {
+    it('should get keys in global context', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload=global.keys();return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -309,23 +287,23 @@ test('function_vm node', async(t) => {
             },20);
         });
     }
-    await it('should drop and log non-object message types - string', function(done) {
+    it('should drop and log non-object message types - string', function(done) {
         testNonObjectMessage('return "foo"', done)
     });
-    await it('should drop and log non-object message types - buffer', function(done) {
+    it('should drop and log non-object message types - buffer', function(done) {
         testNonObjectMessage('return Buffer.from("hello")', done)
     });
-    await it('should drop and log non-object message types - array', function(done) {
+    it('should drop and log non-object message types - array', function(done) {
         testNonObjectMessage('return [[[1,2,3]]]', done)
     });
-    await it('should drop and log non-object message types - boolean', function(done) {
+    it('should drop and log non-object message types - boolean', function(done) {
         testNonObjectMessage('return true', done)
     });
-    await it('should drop and log non-object message types - number', function(done) {
+    it('should drop and log non-object message types - number', function(done) {
         testNonObjectMessage('return 123', done)
     });
 
-    await it('should handle and log script error', function(done) {
+    it('should handle and log script error', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"var a = 1;\nretunr"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -350,7 +328,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should handle node.on()', function(done) {
+    it('should handle node.on()', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"node.on('close',function(){ node.log('closed')});"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -377,7 +355,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should set node context', function(done) {
+    it('should set node context', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"context.set('count','0');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -394,7 +372,7 @@ test('function_vm node', async(t) => {
     });
 
     /*
-    await it('should set persistable node context (w/o callback)', function(done) {
+    it('should set persistable node context (w/o callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"context.set('count','0','memory1');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -419,7 +397,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should set two persistable node context (w/o callback)', function(done) {
+    it('should set two persistable node context (w/o callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"context.set('count','0','memory1');context.set('count','1','memory2');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -447,7 +425,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should set two persistable node context (single call, w/o callback)', function(done) {
+    it('should set two persistable node context (single call, w/o callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"context.set(['count1','count2'],['0','1'],'memory1');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -476,7 +454,7 @@ test('function_vm node', async(t) => {
     });
 
 
-    await it('should set persistable node context (w callback)', function(done) {
+    it('should set persistable node context (w callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"context.set('count','0','memory1', function (err) { node.send(msg); });"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -501,7 +479,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should set two persistable node context (w callback)', function(done) {
+    it('should set two persistable node context (w callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"context.set('count','0','memory1', function (err) { context.set('count', '1', 'memory2', function (err) { node.send(msg); }); });"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -529,7 +507,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should set two persistable node context (single call, w callback)', function(done) {
+    it('should set two persistable node context (single call, w callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"context.set(['count1','count2'],['0','1'],'memory1', function(err) { node.send(msg); });"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -558,7 +536,7 @@ test('function_vm node', async(t) => {
     });
 
 
-    await it('should set default persistable node context', function(done) {
+    it('should set default persistable node context', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"context.set('count','0');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -583,7 +561,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get node context', function(done) {
+    it('should get node context', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload=context.get('count');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -620,7 +598,7 @@ test('function_vm node', async(t) => {
         },50);
     }
 
-    await it('should get persistable node context (w/o callback)', function(done) {
+    it('should get persistable node context (w/o callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload=context.get('count','memory1');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -638,7 +616,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get persistable node context (w/ callback)', function(done) {
+    it('should get persistable node context (w/ callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"context.get('count','memory1',function (err, val) { msg.payload=val; node.send(msg); });"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -656,7 +634,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get keys in node context', function(done) {
+    it('should get keys in node context', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload=context.keys();return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -672,7 +650,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get keys in persistable node context (w/o callback)', function(done) {
+    it('should get keys in persistable node context (w/o callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload=context.keys('memory1');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -695,7 +673,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get keys in persistable node context (w/ callback)', function(done) {
+    it('should get keys in persistable node context (w/ callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"context.keys('memory1', function(err, keys) { msg.payload=keys; node.send(msg); });"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -718,7 +696,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get keys in default persistable node context', function(done) {
+    it('should get keys in default persistable node context', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload=context.keys();return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -742,7 +720,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should set flow context', function(done) {
+    it('should set flow context', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"flow.set('count','0');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -758,7 +736,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should set persistable flow context (w/o callback)', function(done) {
+    it('should set persistable flow context (w/o callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"flow.set('count','0','memory1');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -783,7 +761,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should set two persistable flow context (w/o callback)', function(done) {
+    it('should set two persistable flow context (w/o callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"flow.set('count','0','memory1');flow.set('count','1','memory2');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -811,7 +789,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should set persistable flow context (w/ callback)', function(done) {
+    it('should set persistable flow context (w/ callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"flow.set('count','0','memory1', function (err) { node.send(msg); });"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -836,7 +814,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should set two persistable flow context (w/ callback)', function(done) {
+    it('should set two persistable flow context (w/ callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"flow.set('count','0','memory1', function (err) { flow.set('count','1','memory2', function (err) { node.send(msg); }); });"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -864,7 +842,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get flow context', function(done) {
+    it('should get flow context', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"msg.payload=flow.get('count');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -880,7 +858,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get persistable flow context (w/o callback)', function(done) {
+    it('should get persistable flow context (w/o callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"msg.payload=flow.get('count','memory1');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -898,7 +876,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get persistable flow context (w/ callback)', function(done) {
+    it('should get persistable flow context (w/ callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"flow.get('count','memory1', function(err, val) { msg.payload=val; node.send(msg); });"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -916,7 +894,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get flow context', function(done) {
+    it('should get flow context', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"msg.payload=context.flow.get('count');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -932,7 +910,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get keys in flow context', function(done) {
+    it('should get keys in flow context', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"msg.payload=flow.keys();return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -948,7 +926,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get keys in persistable flow context (w/o callback)', function(done) {
+    it('should get keys in persistable flow context (w/o callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"msg.payload=flow.keys('memory1');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -971,7 +949,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get keys in persistable flow context (w/ callback)', function(done) {
+    it('should get keys in persistable flow context (w/ callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"flow.keys('memory1', function (err, val) { msg.payload=val; node.send(msg); });"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -994,7 +972,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should set global context', function(done) {
+    it('should set global context', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"global.set('count','0');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1010,7 +988,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should set persistable global context (w/o callback)', function(done) {
+    it('should set persistable global context (w/o callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"global.set('count','0','memory1');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1035,7 +1013,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should set persistable global context (w/ callback)', function(done) {
+    it('should set persistable global context (w/ callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"global.set('count','0','memory1', function (err) { node.send(msg); });"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1060,7 +1038,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get global context', function(done) {
+    it('should get global context', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload=global.get('count');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1076,7 +1054,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get persistable global context (w/o callback)', function(done) {
+    it('should get persistable global context (w/o callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload=global.get('count', 'memory1');return msg;"},
         {id:"n2", type:"helper"}];
         initContext(function () {
@@ -1094,7 +1072,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get persistable global context (w/ callback)', function(done) {
+    it('should get persistable global context (w/ callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"global.get('count', 'memory1', function (err, val) { msg.payload=val; node.send(msg); });"},
         {id:"n2", type:"helper"}];
         initContext(function () {
@@ -1112,7 +1090,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get global context', function(done) {
+    it('should get global context', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload=context.global.get('count');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1128,7 +1106,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get persistable global context (w/o callback)', function(done) {
+    it('should get persistable global context (w/o callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload=context.global.get('count','memory1');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1151,7 +1129,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should get persistable global context (w/ callback)', function(done) {
+    it('should get persistable global context (w/ callback)', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"context.global.get('count','memory1', function (err, val) { msg.payload = val; node.send(msg); });"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1174,7 +1152,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should handle error on get persistable context', function(done) {
+    it('should handle error on get persistable context', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"msg.payload=context.get('count','memory1','callback');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -1188,7 +1166,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should handle error on set persistable context', function(done) {
+    it('should handle error on set persistable context', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"msg.payload=context.set('count','0','memory1','callback');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -1201,7 +1179,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should handle error on get keys in persistable context', function(done) {
+    it('should handle error on get keys in persistable context', function(done) {
         var flow = [{id:"n1",type:"function_vm",z:"flowA",wires:[["n2"]],func:"msg.payload=context.keys('memory1','callback');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
@@ -1216,7 +1194,7 @@ test('function_vm node', async(t) => {
     });
     */
 
-    await it('should handle setTimeout()', function(done) {
+    it('should handle setTimeout()', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"setTimeout(function(){node.send(msg);},700);"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1242,7 +1220,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should handle setInterval()', function(done) {
+    it('should handle setInterval()', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"setInterval(function(){node.send(msg);},100);"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1261,7 +1239,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should handle clearInterval()', function(done) {
+    it('should handle clearInterval()', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"var id=setInterval(null,100);setTimeout(function(){clearInterval(id);node.send(msg);},500);"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1276,7 +1254,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should allow accessing node.id', function(done) {
+    it('should allow accessing node.id', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload = node.id; return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1290,7 +1268,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should allow accessing node.name', function(done) {
+    it('should allow accessing node.name', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload = node.name; return msg;", "name":"name of node"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1304,7 +1282,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should use the same Date object from outside the sandbox', function(done) {
+    it('should use the same Date object from outside the sandbox', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload=global.get('typeTest')(new Date());return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1319,7 +1297,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should allow accessing env vars', function(done) {
+    it('should allow accessing env vars', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload = env.get('_TEST_FOO_'); return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1349,7 +1327,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should execute initialization', function(done) {
+    it('should execute initialization', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload = global.get('X'); return msg;",initialize:"global.set('X','bar');"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1363,7 +1341,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should wait completion of initialization', function(done) {
+    it('should wait completion of initialization', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],func:"msg.payload = global.get('X'); return msg;",initialize:"global.set('X', '-'); return new Promise((resolve, reject) => setTimeout(() => { global.set('X','bar'); resolve(); }, 500));"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
@@ -1377,7 +1355,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await it('should execute finalization', function(done) {
+    it('should execute finalization', function(done) {
         var flow = [{id:"n1",type:"function_vm",wires:[],func:"return msg;",finalize:"global.set('X','bar');"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -1389,7 +1367,7 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await test('Logger', async function () {
+    describe('Logger', function () {
 
         function testLog(initCode,funcCode,expectedLevel, done) {
             var flow = [{id: "n1", type: "function_vm", wires: [["n2"]], func: funcCode, initialize: initCode}];
@@ -1416,39 +1394,39 @@ test('function_vm node', async(t) => {
             });
         }
 
-        await it('should log an Info Message', function (done) {
+        it('should log an Info Message', function (done) {
             testLog("","node.log('test');","INFO",done);
         });
-        await it('should log a Debug Message', function (done) {
+        it('should log a Debug Message', function (done) {
             testLog("","node.debug('test');","DEBUG",done);
         });
-        await it('should log a Trace Message', function (done) {
+        it('should log a Trace Message', function (done) {
             testLog("","node.trace('test');","TRACE",done);
         });
-        await it('should log a Warning Message', function (done) {
+        it('should log a Warning Message', function (done) {
             testLog("","node.warn('test');","WARN",done);
         });
-        await it('should log an Error Message', function (done) {
+        it('should log an Error Message', function (done) {
             testLog("","node.error('test');","ERROR",done);
         });
 
-        await it('should log an Info Message - initialise', function (done) {
+        it('should log an Info Message - initialise', function (done) {
             testLog("node.log('test');","","INFO",done);
         });
-        await it('should log a Debug Message - initialise', function (done) {
+        it('should log a Debug Message - initialise', function (done) {
             testLog("node.debug('test');","","DEBUG",done);
         });
-        await it('should log a Trace Message - initialise', function (done) {
+        it('should log a Trace Message - initialise', function (done) {
             testLog("node.trace('test');","","TRACE",done);
         });
-        await it('should log a Warning Message - initialise', function (done) {
+        it('should log a Warning Message - initialise', function (done) {
             testLog("node.warn('test');","","WARN",done);
         });
-        await it('should log an Error Message - initialise', function (done) {
+        it('should log an Error Message - initialise', function (done) {
             testLog("node.error('test');","","ERROR",done);
         });
 
-        await it('should catch thrown string', function (done) {
+        it('should catch thrown string', function (done) {
             var flow = [{id: "n1", type: "function_vm", wires: [["n2"]], func: "throw \"small mistake\";"}];
             helper.load(node, flow, function () {
                 var n1 = helper.getNode("n1");
@@ -1472,7 +1450,7 @@ test('function_vm node', async(t) => {
                 },50);
             });
         });
-        await it('should catch thrown number', function (done) {
+        it('should catch thrown number', function (done) {
             var flow = [{id: "n1", type: "function_vm", wires: [["n2"]], func: "throw 99;"}];
             helper.load(node, flow, function () {
                 var n1 = helper.getNode("n1");
@@ -1496,7 +1474,7 @@ test('function_vm node', async(t) => {
                 },50);
             });
         });
-        await it('should catch thrown object (bad practice)', function (done) {
+        it('should catch thrown object (bad practice)', function (done) {
             var flow = [{id: "n1", type: "function_vm", wires: [["n2"]], func: "throw {a:1};"}];
             helper.load(node, flow, function () {
                 var n1 = helper.getNode("n1");
@@ -1522,9 +1500,9 @@ test('function_vm node', async(t) => {
         });
     });
 
-    await test("init function", async function() {
+    describe("init function", function() {
 
-        await it('should delay handling messages until init completes', function(done) {
+        it('should delay handling messages until init completes', function(done) {
             var flow = [{id:"n1",type:"function_vm",wires:[["n2"]],initialize: `
                 return new Promise((resolve,reject) => {
                     setTimeout(resolve,200)
@@ -1554,7 +1532,7 @@ test('function_vm node', async(t) => {
             });
         });
 
-        await it('should allow accessing node.id and node.name and sending message', function(done) {
+        it('should allow accessing node.id and node.name and sending message', function(done) {
             var flow = [{id:"n1",name:"test-function", type:"function_vm",wires:[["n2"]],initialize:"setTimeout(function() { node.send({ topic: node.name, payload:node.id})},10)", func: ""},
             {id:"n2", type:"helper"}];
             helper.load(node, flow, function() {
@@ -1575,4 +1553,4 @@ test('function_vm node', async(t) => {
         });
 
     })
-});
+})
