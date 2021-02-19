@@ -8,6 +8,13 @@ Provides alternative implementation of node-red nodes, aiming to provide either 
 
 1. some improvement in the `sandbox` to reduce overhead and security risk in `vm`
 
+### function_unsafe
+
+An implementation using the good ol' `eval`
+
+* Speed : up to 3 times faster by reducing the workload in `vm` (specifically on short function)
+* Security : None
+
 ### function_vm
 
 An alternative implementation of the node-red function node.

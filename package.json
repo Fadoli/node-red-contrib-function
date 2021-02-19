@@ -20,7 +20,8 @@
   "node-red": {
     "nodes": {
       "function_vm2": "./src/function_vm2.js",
-      "function_vm": "./src/function_vm.js"
+      "function_vm": "./src/function_vm.js",
+      "function_unsafe": "./src/function_unsafe.js"
     }
   }
 }
