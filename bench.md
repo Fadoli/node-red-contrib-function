@@ -1,6 +1,6 @@
 # About the performance
 
-Benchmark runned on a non-modified Node-Red `v1.2.9`
+Benchmark runned on a non-modified Node-Red `v1.2.9` on w10
 
 on an AMD r5 5600x, with 32GB of 3200MHz cl 16-18-18 memory
 
@@ -14,7 +14,7 @@ on an AMD r5 5600x, with 32GB of 3200MHz cl 16-18-18 memory
 
 | Implementation | Maximum msg/s reached |
 |:--------------:|:---------------------:|
-|custom Function-unsafe| ~146.000 msg/s |
-|custom Function-vm| ~112.000 msg/s |
+|custom Function-unsafe| ~275.000 msg/s |
+|custom Function-vm| ~225.000 msg/s |
 |Node-Red Function| ~40.000 msg/s |
-|custom Function-vm2| ~4.300 msg/s |
+|custom Function-vm2| ~4.600 msg/s |

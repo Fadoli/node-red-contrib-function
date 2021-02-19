@@ -14,14 +14,14 @@ benchmark information can be found in [bench.md](./bench.md)
 
 An implementation using the good ol' `eval`
 
-* Speed : up to 3-4 times faster by reducing the workload in `vm` (specifically on short function)
+* Speed : up to 6-7 times faster by reducing the workload in `vm` (specifically on short function)
 * Security : None
 
 ### function_vm
 
 An alternative implementation of the node-red function node.
 
-* Speed : up to 3 times faster by reducing the workload in `vm` (specifically on short function)
+* Speed : up to 5-6 times faster by reducing the workload in `vm` (specifically on short function)
 * Security : a bit improved (see Security of the NR part)
 
 ### function_vm2

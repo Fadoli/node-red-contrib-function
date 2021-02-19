@@ -235,6 +235,9 @@ module.exports = function(RED) {
                 promise = iniScript.runInContext(context);
             }
 
+            const needTime = process.env.NODE_RED_FUNCTION_TIME;
+            const hasMetrics = node.metric();
+            
             function processMessage(msg, send, done) {
                 var start = process.hrtime();
                 
@@ -244,11 +247,14 @@ module.exports = function(RED) {
                         done();
                     }
 
-                    var duration = process.hrtime(start);
-                    var converted = Math.floor((duration[0] * 1e9 + duration[1])/10000)/100;
-                    node.metric("duration", msg, converted);
-                    if (process.env.NODE_RED_FUNCTION_TIME) {
-                        node.status({fill:"yellow",shape:"dot",text:""+converted});
+                    if (needTime || hasMetrics) {
+                        var duration = process.hrtime(start);
+                        var converted = Math.floor((duration[0] * 1e9 + duration[1])/10000)/100;
+                        if (needTime) {
+                            node.status({fill:"yellow",shape:"dot",text:""+converted});
+                        } else {
+                            node.metric("duration",msg,converted);
+                        }
                     }
                 }).catch(err => {
                     if (err && err.stack) {
