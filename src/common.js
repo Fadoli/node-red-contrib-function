@@ -60,5 +60,8 @@ module.exports = {
                 err.message += " ("+kind+"line "+line+")";
             }
         }
+    },
+    replaceAll(str,from,to) {
+        return str.split(from).join(to);
     }
 }

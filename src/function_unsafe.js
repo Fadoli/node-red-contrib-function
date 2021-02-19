@@ -14,16 +14,6 @@
  * limitations under the License.
  **/
 
-function runInContext (func, __context__) {
-    let contextPrefix = ``
-    const keys = Object.keys(__context__);
-    keys.forEach((key) => {
-        contextPrefix += `const ${key}=__context__.${key};`
-    });
-    // hide plain simple require, though it's still in global.require
-    let require = '';
-    return eval(`${contextPrefix}${func.replace('this','__context__')}`);
-}
 
 
 module.exports = function(RED) {
@@ -34,6 +24,18 @@ module.exports = function(RED) {
     common.init(RED);
     const sendResults = common.sendResults;
     const updateErrorInfo = common.updateErrorInfo;
+    const replaceAll = common.replaceAll;
+    
+    function runInContext (func, __context__) {
+        let contextPrefix = ``
+        const keys = Object.keys(__context__);
+        keys.forEach((key) => {
+            contextPrefix += `const ${key}=__context__.${key};`
+        });
+        // hide plain simple require, though it's still in global.require
+        let require = '';
+        return eval(`${contextPrefix}${replaceAll(func,'this','__context__')}`);
+    }
 
     function FunctionNode(n) {
         RED.nodes.createNode(this,n);
@@ -226,7 +228,7 @@ module.exports = function(RED) {
 
             const needTime = process.env.NODE_RED_FUNCTION_TIME;
             const hasMetrics = node.metric();
-            
+
             function processMessage(msg, send, done) {
                 var start = process.hrtime();
                 Promise.resolve(functionProcess(msg,send,done)).then(function(results) {
@@ -250,7 +252,7 @@ module.exports = function(RED) {
                         const stacks = (err.stack || err).split('\n');
                         let errorData = [];
                         stacks.forEach(rawline => {
-                            line = rawline.trim();
+                            let line = rawline.trim();
                             if (line.indexOf('<anonymous>') === -1) {
                                 return;
                             }
@@ -263,7 +265,7 @@ module.exports = function(RED) {
                         // Offset due to code
                         const lineNumber = errorData[errorData.length-2] - 3;
                         const charNumber = errorData[errorData.length-1].slice(0,-1);
-                        errorMessage = `${stacks[0]} (line ${lineNumber}, col ${charNumber})`;
+                        const errorMessage = `${stacks[0]} (line ${lineNumber}, col ${charNumber})`;
 
                         return done(errorMessage);
                     } else {
@@ -325,7 +327,6 @@ module.exports = function(RED) {
 
         }
         catch(err) {
-            console.error(err);
             // eg SyntaxError - which v8 doesn't include line number information
             // so we can't do better than this
             updateErrorInfo(err);
