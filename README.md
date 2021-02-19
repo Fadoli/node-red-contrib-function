@@ -2,6 +2,8 @@
 
 Provides alternative implementation of node-red nodes, aiming to provide either better security (vm2) or better performances (vm)
 
+benchmark information can be found in [bench.md](./bench.md)
+
 ## Difference with NR implementation
 
 1. the function inputed by the user is turned into a function, that gets called instead of re-executing the script with different variables.
@@ -12,14 +14,14 @@ Provides alternative implementation of node-red nodes, aiming to provide either 
 
 An implementation using the good ol' `eval`
 
-* Speed : up to 3 times faster by reducing the workload in `vm` (specifically on short function)
+* Speed : up to 3-4 times faster by reducing the workload in `vm` (specifically on short function)
 * Security : None
 
 ### function_vm
 
 An alternative implementation of the node-red function node.
 
-* Speed : up to 2 to 3 times faster by reducing the workload in `vm` (specifically on short function)
+* Speed : up to 3 times faster by reducing the workload in `vm` (specifically on short function)
 * Security : a bit improved (see Security of the NR part)
 
 ### function_vm2
@@ -46,7 +48,7 @@ see point 2 in Difference with NR implementation.
 it makes possible over-riding any function in RED.utils for the runtime :
 
 ``` JSON
-[{"id":"470dca49.8c5bec","type":"function","z":"cfcd3c8c.f02bc8","name":"Hack NR","func":"","outputs":1,"noerr":0,"initialize":"return;\nconsole.log((this.constructor.constructor(\"return this\"))().global)\nthis.origclone = RED.util.cloneMessage;\nRED.util.cloneMessage = function (...params) {\n    console.log((this.constructor.constructor(\"return this\"))().global)\n    return origclone.call(this,...params);\n}","finalize":"RED.util.cloneMessage = this.origclone;","x":360,"y":140,"wires":[[]]}]
+[{"id":"470dca49.8c5bec","type":"function","z":"cfcd3c8c.f02bc8","name":"Hack NR","func":"","outputs":1,"noerr":0,"initialize":"console.log((this.constructor.constructor(\"return this\"))().global)\nthis.origclone = RED.util.cloneMessage;\n\nRED.util.cloneMessage = function (...params) {\n    console.log(\"Wanting to clone\" + JSON.stringify(params))\n    return origclone.call(this,...params);\n}","finalize":"RED.util.cloneMessage = this.origclone;","x":360,"y":140,"wires":[[]]}]
 ```
 
 it adds a log to the cloneMessage function
