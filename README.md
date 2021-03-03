@@ -36,7 +36,9 @@ Note : to obtain such result, several messages have to be inserted (more than on
 
 ## Security
 
-A simple function node can compromise the whole instance, it is possible to override any function in RED.utils in the whole runtime :
+This node has a workaround for the next issue :
+
+A simple function node can compromise the whole instance, it is possible to override any function from RED.utils :
 
 ```JSON
 [{"id":"470dca49.8c5bec","type":"function","z":"cfcd3c8c.f02bc8","name":"Hack NR","func":"","outputs":1,"noerr":0,"initialize":"this.origclone = RED.util.cloneMessage;\n\nRED.util.cloneMessage = function (...params) {\n    console.log(\"Wanting to clone\" + JSON.stringify(params))\n    return origclone.call(this,...params);\n}","finalize":"RED.util.cloneMessage = this.origclone;","x":360,"y":140,"wires":[[]]}]
@@ -44,7 +46,7 @@ A simple function node can compromise the whole instance, it is possible to over
 
 This adds a log to the cloneMessage function.
 
-Note, security holes from within `vm` are still accessible
+Note, this node is still affected by security holes from within `vm` are still accessible
 
 ```js
 console.log((this.constructor.constructor("return this"))().global)
