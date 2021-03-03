@@ -1,27 +1,21 @@
 {
   "name": "node-red-contrib-function",
   "version": "1.0.0",
-  "description": "get data from node-red",
-  "main": "index.js",
+  "description": "an other implementation of node-red function",
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {
-    "vm2": "^3.0.2"
-  },
   "devDependencies": {
+    "mocha": "^8.3.0",
     "node-red": "1.2.9",
     "node-red-node-test-helper": "^0.2.7",
-    "should": "^13.2.3",
-    "mocha": "^8.3.0"
+    "should": "^13.2.3"
   },
   "author": "",
   "license": "ISC",
   "node-red": {
     "nodes": {
-      "function_vm2": "./src/function_vm2.js",
-      "function_vm": "./src/function_vm.js",
-      "function_unsafe": "./src/function_unsafe.js"
+      "function2": "./src/function2.js"
     }
   }
 }

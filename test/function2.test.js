@@ -1,8 +1,8 @@
 const helper = require('node-red-node-test-helper');
 const should = require('should');
-const node = require('../src/function_unsafe');
+const node = require('../src/function2');
 
-describe('function_unsafe node', () => {
+describe('function2 node', () => {
     before(function(done) {
         helper.startServer(done);
     });
@@ -15,9 +15,8 @@ describe('function_unsafe node', () => {
         return helper.unload();
     })
 
-
     it('should be loaded', function(done) {
-        var flow = [{id:"n1", type:"function_unsafe", name: "function" }];
+        var flow = [{id:"n1", type:"function2", name: "function" }];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
             n1.should.have.property('name', 'function');
@@ -27,7 +26,7 @@ describe('function_unsafe node', () => {
     
     /*
     it('should do something with the catch node', function(done) {
-        var flow = [{"id":"funcNode","type":"function_unsafe","wires":[["goodNode"]],"func":"node.error('This is an error', msg);"},{"id":"goodNode","type":"helper"},{"id":"badNode","type":"helper"},{"id":"catchNode","type":"catch","scope":null,"uncaught":false,"wires":[["badNode"]]}];
+        var flow = [{"id":"funcNode","type":"function2","wires":[["goodNode"]],"func":"node.error('This is an error', msg);"},{"id":"goodNode","type":"helper"},{"id":"badNode","type":"helper"},{"id":"catchNode","type":"catch","scope":null,"uncaught":false,"wires":[["badNode"]]}];
         var catchNodeModule = require("nr-test-utils").require("@node-red/nodes/core/common/25-catch.js")
         helper.load([catchNodeModule, node], flow, function() {
             var funcNode = helper.getNode("funcNode");
@@ -50,7 +49,7 @@ describe('function_unsafe node', () => {
     */
    
     it('should send returned message', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -65,7 +64,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should send returned message using send()', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"node.send(msg);"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"node.send(msg);"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -80,7 +79,7 @@ describe('function_unsafe node', () => {
     });
 
     function testSendCloning(args,done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"],["n2"]],func:"node.send("+args+"); msg.payload = 'changed';"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"],["n2"]],func:"node.send("+args+"); msg.payload = 'changed';"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -102,7 +101,7 @@ describe('function_unsafe node', () => {
         testSendCloning("msg",done);
     });
     it('should not clone single message sent using send(,false)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"node.send(msg,false); msg.payload = 'changed';"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"node.send(msg,false); msg.payload = 'changed';"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -130,7 +129,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should pass through _topic', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -146,7 +145,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should send to multiple outputs', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"],["n3"]],
+        var flow = [{id:"n1",type:"function2",wires:[["n2"],["n3"]],
         func:"return [{payload: '1'},{payload: '2'}];"},
         {id:"n2", type:"helper"}, {id:"n3", type:"helper"} ];
         helper.load(node, flow, function() {
@@ -173,7 +172,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should send to multiple messages', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],
         func:"return [[{payload: 1},{payload: 2}]];"},
         {id:"n2", type:"helper"} ];
         helper.load(node, flow, function() {
@@ -197,7 +196,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should allow input to be discarded by returning null', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"return null"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"return null"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -213,7 +212,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should handle null amongst valid messages', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"return [[msg,null,msg],null]"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"return [[msg,null,msg],null]"},
         {id:"n2", type:"helper"},
         {id:"n3", type:"helper"}];
         helper.load(node, flow, function() {
@@ -243,7 +242,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get keys in global context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload=global.keys();return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload=global.keys();return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -259,7 +258,7 @@ describe('function_unsafe node', () => {
     });
 
     function testNonObjectMessage(functionText,done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:functionText},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:functionText},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -273,13 +272,13 @@ describe('function_unsafe node', () => {
                 try {
                     n2MsgCount.should.equal(0);
                     var logEvents = helper.log().args.filter(function(evt) {
-                        return evt[0].type == "function_unsafe";
+                        return evt[0].type == "function2";
                     });
                     logEvents.should.have.length(1);
                     var msg = logEvents[0][0];
                     msg.should.have.property('level', helper.log().ERROR);
                     msg.should.have.property('id', 'n1');
-                    msg.should.have.property('type', 'function_unsafe');
+                    msg.should.have.property('type', 'function2');
                     msg.should.have.property('msg', 'function.error.non-message-returned');
                     done();
                 } catch(err) {
@@ -305,7 +304,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should handle and log script error', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"var a = 1;\nretunr"}];
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"var a = 1;\nretunr"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
             n1.receive({payload:"foo",topic: "bar"});
@@ -313,13 +312,13 @@ describe('function_unsafe node', () => {
                 try {
                     helper.log().called.should.be.true();
                     var logEvents = helper.log().args.filter(function(evt) {
-                        return evt[0].type == "function_unsafe";
+                        return evt[0].type == "function2";
                     });
                     logEvents.should.have.length(1);
                     var msg = logEvents[0][0];
                     msg.should.have.property('level', helper.log().ERROR);
                     msg.should.have.property('id', 'n1');
-                    msg.should.have.property('type', 'function_unsafe');
+                    msg.should.have.property('type', 'function2');
                     msg.should.have.property('msg', 'ReferenceError: retunr is not defined (line 2, col 1)');
                     done();
                 } catch(err) {
@@ -330,7 +329,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should handle node.on()', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"node.on('close',function(){ node.log('closed')});"}];
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"node.on('close',function(){ node.log('closed')});"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
             n1.receive({payload:"foo",topic: "bar"});
@@ -339,13 +338,13 @@ describe('function_unsafe node', () => {
                     try {
                         helper.log().called.should.be.true();
                         var logEvents = helper.log().args.filter(function(evt) {
-                            return evt[0].type == "function_unsafe";
+                            return evt[0].type == "function2";
                         });
                         logEvents.should.have.length(1);
                         var msg = logEvents[0][0];
                         msg.should.have.property('level', helper.log().INFO);
                         msg.should.have.property('id', 'n1');
-                        msg.should.have.property('type', 'function_unsafe');
+                        msg.should.have.property('type', 'function2');
                         msg.should.have.property('msg', 'closed');
                         done();
                     } catch(err) {
@@ -357,7 +356,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should set node context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"context.set('count','0');return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"context.set('count','0');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -374,7 +373,7 @@ describe('function_unsafe node', () => {
 
     /*
     it('should set persistable node context (w/o callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"context.set('count','0','memory1');return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"context.set('count','0','memory1');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -399,7 +398,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should set two persistable node context (w/o callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"context.set('count','0','memory1');context.set('count','1','memory2');return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"context.set('count','0','memory1');context.set('count','1','memory2');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -427,7 +426,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should set two persistable node context (single call, w/o callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"context.set(['count1','count2'],['0','1'],'memory1');return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"context.set(['count1','count2'],['0','1'],'memory1');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -456,7 +455,7 @@ describe('function_unsafe node', () => {
 
 
     it('should set persistable node context (w callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"context.set('count','0','memory1', function (err) { node.send(msg); });"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"context.set('count','0','memory1', function (err) { node.send(msg); });"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -481,7 +480,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should set two persistable node context (w callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"context.set('count','0','memory1', function (err) { context.set('count', '1', 'memory2', function (err) { node.send(msg); }); });"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"context.set('count','0','memory1', function (err) { context.set('count', '1', 'memory2', function (err) { node.send(msg); }); });"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -509,7 +508,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should set two persistable node context (single call, w callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"context.set(['count1','count2'],['0','1'],'memory1', function(err) { node.send(msg); });"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"context.set(['count1','count2'],['0','1'],'memory1', function(err) { node.send(msg); });"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -538,7 +537,7 @@ describe('function_unsafe node', () => {
 
 
     it('should set default persistable node context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"context.set('count','0');return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"context.set('count','0');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -563,7 +562,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get node context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload=context.get('count');return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload=context.get('count');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -583,13 +582,13 @@ describe('function_unsafe node', () => {
             try {
                 helper.log().called.should.be.true();
                 var logEvents = helper.log().args.filter(function (evt) {
-                    return evt[0].type == "function_unsafe";
+                    return evt[0].type == "function2";
                 });
                 logEvents.should.have.length(1);
                 var msg = logEvents[0][0];
                 msg.should.have.property('level', helper.log().ERROR);
                 msg.should.have.property('id', name);
-                msg.should.have.property('type', 'function_unsafe');
+                msg.should.have.property('type', 'function2');
                 msg.should.have.property('msg', 'Error: Callback must be a function');
                 done();
             }
@@ -600,7 +599,7 @@ describe('function_unsafe node', () => {
     }
 
     it('should get persistable node context (w/o callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload=context.get('count','memory1');return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload=context.get('count','memory1');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -618,7 +617,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get persistable node context (w/ callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"context.get('count','memory1',function (err, val) { msg.payload=val; node.send(msg); });"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"context.get('count','memory1',function (err, val) { msg.payload=val; node.send(msg); });"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -636,7 +635,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get keys in node context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload=context.keys();return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload=context.keys();return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -652,7 +651,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get keys in persistable node context (w/o callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload=context.keys('memory1');return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload=context.keys('memory1');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -675,7 +674,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get keys in persistable node context (w/ callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"context.keys('memory1', function(err, keys) { msg.payload=keys; node.send(msg); });"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"context.keys('memory1', function(err, keys) { msg.payload=keys; node.send(msg); });"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -698,7 +697,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get keys in default persistable node context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload=context.keys();return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload=context.keys();return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -722,7 +721,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should set flow context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"flow.set('count','0');return msg;"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"flow.set('count','0');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -738,7 +737,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should set persistable flow context (w/o callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"flow.set('count','0','memory1');return msg;"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"flow.set('count','0','memory1');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -763,7 +762,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should set two persistable flow context (w/o callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"flow.set('count','0','memory1');flow.set('count','1','memory2');return msg;"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"flow.set('count','0','memory1');flow.set('count','1','memory2');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -791,7 +790,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should set persistable flow context (w/ callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"flow.set('count','0','memory1', function (err) { node.send(msg); });"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"flow.set('count','0','memory1', function (err) { node.send(msg); });"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -816,7 +815,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should set two persistable flow context (w/ callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"flow.set('count','0','memory1', function (err) { flow.set('count','1','memory2', function (err) { node.send(msg); }); });"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"flow.set('count','0','memory1', function (err) { flow.set('count','1','memory2', function (err) { node.send(msg); }); });"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -844,7 +843,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get flow context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"msg.payload=flow.get('count');return msg;"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"msg.payload=flow.get('count');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -860,7 +859,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get persistable flow context (w/o callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"msg.payload=flow.get('count','memory1');return msg;"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"msg.payload=flow.get('count','memory1');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -878,7 +877,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get persistable flow context (w/ callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"flow.get('count','memory1', function(err, val) { msg.payload=val; node.send(msg); });"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"flow.get('count','memory1', function(err, val) { msg.payload=val; node.send(msg); });"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -896,7 +895,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get flow context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"msg.payload=context.flow.get('count');return msg;"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"msg.payload=context.flow.get('count');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -912,7 +911,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get keys in flow context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"msg.payload=flow.keys();return msg;"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"msg.payload=flow.keys();return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -928,7 +927,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get keys in persistable flow context (w/o callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"msg.payload=flow.keys('memory1');return msg;"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"msg.payload=flow.keys('memory1');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -951,7 +950,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get keys in persistable flow context (w/ callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"flow.keys('memory1', function (err, val) { msg.payload=val; node.send(msg); });"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"flow.keys('memory1', function (err, val) { msg.payload=val; node.send(msg); });"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -974,7 +973,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should set global context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"global.set('count','0');return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"global.set('count','0');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -990,7 +989,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should set persistable global context (w/o callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"global.set('count','0','memory1');return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"global.set('count','0','memory1');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -1015,7 +1014,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should set persistable global context (w/ callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"global.set('count','0','memory1', function (err) { node.send(msg); });"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"global.set('count','0','memory1', function (err) { node.send(msg); });"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -1040,7 +1039,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get global context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload=global.get('count');return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload=global.get('count');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -1056,7 +1055,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get persistable global context (w/o callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload=global.get('count', 'memory1');return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload=global.get('count', 'memory1');return msg;"},
         {id:"n2", type:"helper"}];
         initContext(function () {
             helper.load(node, flow, function() {
@@ -1074,7 +1073,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get persistable global context (w/ callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"global.get('count', 'memory1', function (err, val) { msg.payload=val; node.send(msg); });"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"global.get('count', 'memory1', function (err, val) { msg.payload=val; node.send(msg); });"},
         {id:"n2", type:"helper"}];
         initContext(function () {
             helper.load(node, flow, function() {
@@ -1092,7 +1091,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get global context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload=context.global.get('count');return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload=context.global.get('count');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -1108,7 +1107,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get persistable global context (w/o callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload=context.global.get('count','memory1');return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload=context.global.get('count','memory1');return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -1131,7 +1130,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should get persistable global context (w/ callback)', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"context.global.get('count','memory1', function (err, val) { msg.payload = val; node.send(msg); });"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"context.global.get('count','memory1', function (err, val) { msg.payload = val; node.send(msg); });"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -1154,7 +1153,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should handle error on get persistable context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"msg.payload=context.get('count','memory1','callback');return msg;"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"msg.payload=context.get('count','memory1','callback');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -1168,7 +1167,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should handle error on set persistable context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"msg.payload=context.set('count','0','memory1','callback');return msg;"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"msg.payload=context.set('count','0','memory1','callback');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -1181,7 +1180,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should handle error on get keys in persistable context', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",z:"flowA",wires:[["n2"]],func:"msg.payload=context.keys('memory1','callback');return msg;"},
+        var flow = [{id:"n1",type:"function2",z:"flowA",wires:[["n2"]],func:"msg.payload=context.keys('memory1','callback');return msg;"},
         {id:"n2", type:"helper",z:"flowA"}];
         helper.load(node, flow, function() {
             initContext(function () {
@@ -1196,7 +1195,7 @@ describe('function_unsafe node', () => {
     */
 
     it('should handle setTimeout()', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"setTimeout(function(){node.send(msg);},700);"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"setTimeout(function(){node.send(msg);},700);"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -1222,7 +1221,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should handle setInterval()', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"setInterval(function(){node.send(msg);},100);"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"setInterval(function(){node.send(msg);},100);"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -1241,7 +1240,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should handle clearInterval()', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"var id=setInterval(null,100);setTimeout(function(){clearInterval(id);node.send(msg);},500);"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"var id=setInterval(null,100);setTimeout(function(){clearInterval(id);node.send(msg);},500);"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -1256,7 +1255,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should allow accessing node.id', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload = node.id; return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload = node.id; return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -1270,7 +1269,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should allow accessing node.name', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload = node.name; return msg;", "name":"name of node"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload = node.name; return msg;", "name":"name of node"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -1284,7 +1283,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should use the same Date object from outside the sandbox', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload=global.get('typeTest')(new Date());return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload=global.get('typeTest')(new Date());return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -1299,7 +1298,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should allow accessing env vars', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload = env.get('_TEST_FOO_'); return msg;"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload = env.get('_TEST_FOO_'); return msg;"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -1329,7 +1328,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should execute initialization', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload = global.get('X'); return msg;",initialize:"global.set('X','bar');"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload = global.get('X'); return msg;",initialize:"global.set('X','bar');"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -1343,7 +1342,7 @@ describe('function_unsafe node', () => {
     });
 
     it('should wait completion of initialization', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],func:"msg.payload = global.get('X'); return msg;",initialize:"global.set('X', '-'); return new Promise((resolve, reject) => setTimeout(() => { global.set('X','bar'); resolve(); }, 500));"},
+        var flow = [{id:"n1",type:"function2",wires:[["n2"]],func:"msg.payload = global.get('X'); return msg;",initialize:"global.set('X', '-'); return new Promise((resolve, reject) => setTimeout(() => { global.set('X','bar'); resolve(); }, 500));"},
         {id:"n2", type:"helper"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
@@ -1357,21 +1356,21 @@ describe('function_unsafe node', () => {
     });
 
     it('should execute finalization', function(done) {
-        var flow = [{id:"n1",type:"function_unsafe",wires:[],func:"return msg;",finalize:"global.set('X','bar');"}];
+        var flow = [{id:"n1",type:"function2",wires:[],func:"return msg;",finalize:"global.set('X','bar');"}];
         helper.load(node, flow, function() {
             var n1 = helper.getNode("n1");
             var ctx = n1.context().global;
             helper.unload().then(function () {
                 ctx.get('X').should.equal("bar");
                 done();
-            }).catch(e => done(e));
+            });
         });
     });
 
     describe('Logger', function () {
 
         function testLog(initCode,funcCode,expectedLevel, done) {
-            var flow = [{id: "n1", type: "function_unsafe", wires: [["n2"]], func: funcCode, initialize: initCode}];
+            var flow = [{id: "n1", type: "function2", wires: [["n2"]], func: funcCode, initialize: initCode}];
             helper.load(node, flow, function () {
                 var n1 = helper.getNode("n1");
                 n1.receive({payload: "foo", topic: "bar"});
@@ -1379,13 +1378,13 @@ describe('function_unsafe node', () => {
                     try {
                         helper.log().called.should.be.true();
                         var logEvents = helper.log().args.filter(function (evt) {
-                            return evt[0].type == "function_unsafe";
+                            return evt[0].type == "function2";
                         });
                         logEvents.should.have.length(1);
                         var msg = logEvents[0][0];
                         msg.should.have.property('level', helper.log()[expectedLevel]);
                         msg.should.have.property('id', 'n1');
-                        msg.should.have.property('type', 'function_unsafe');
+                        msg.should.have.property('type', 'function2');
                         msg.should.have.property('msg', 'test');
                         done();
                     } catch (err) {
@@ -1428,7 +1427,7 @@ describe('function_unsafe node', () => {
         });
 
         it('should catch thrown string', function (done) {
-            var flow = [{id: "n1", type: "function_unsafe", wires: [["n2"]], func: "throw \"small mistake\";"}];
+            var flow = [{id: "n1", type: "function2", wires: [["n2"]], func: "throw \"small mistake\";"}];
             helper.load(node, flow, function () {
                 var n1 = helper.getNode("n1");
                 n1.receive({payload: "foo", topic: "bar"});
@@ -1436,13 +1435,13 @@ describe('function_unsafe node', () => {
                     try {
                         helper.log().called.should.be.true();
                         var logEvents = helper.log().args.filter(function (evt) {
-                            return evt[0].type == "function_unsafe";
+                            return evt[0].type == "function2";
                         });
                         logEvents.should.have.length(1);
                         var msg = logEvents[0][0];
                         msg.should.have.property('level', helper.log().ERROR);
                         msg.should.have.property('id', 'n1');
-                        msg.should.have.property('type', 'function_unsafe');
+                        msg.should.have.property('type', 'function2');
                         msg.should.have.property('msg', 'small mistake');
                         done();
                     } catch (err) {
@@ -1452,7 +1451,7 @@ describe('function_unsafe node', () => {
             });
         });
         it('should catch thrown number', function (done) {
-            var flow = [{id: "n1", type: "function_unsafe", wires: [["n2"]], func: "throw 99;"}];
+            var flow = [{id: "n1", type: "function2", wires: [["n2"]], func: "throw 99;"}];
             helper.load(node, flow, function () {
                 var n1 = helper.getNode("n1");
                 n1.receive({payload: "foo", topic: "bar"});
@@ -1460,13 +1459,13 @@ describe('function_unsafe node', () => {
                     try {
                         helper.log().called.should.be.true();
                         var logEvents = helper.log().args.filter(function (evt) {
-                            return evt[0].type == "function_unsafe";
+                            return evt[0].type == "function2";
                         });
                         logEvents.should.have.length(1);
                         var msg = logEvents[0][0];
                         msg.should.have.property('level', helper.log().ERROR);
                         msg.should.have.property('id', 'n1');
-                        msg.should.have.property('type', 'function_unsafe');
+                        msg.should.have.property('type', 'function2');
                         msg.should.have.property('msg', '99');
                         done();
                     } catch (err) {
@@ -1476,7 +1475,7 @@ describe('function_unsafe node', () => {
             });
         });
         it('should catch thrown object (bad practice)', function (done) {
-            var flow = [{id: "n1", type: "function_unsafe", wires: [["n2"]], func: "throw {a:1};"}];
+            var flow = [{id: "n1", type: "function2", wires: [["n2"]], func: "throw {a:1};"}];
             helper.load(node, flow, function () {
                 var n1 = helper.getNode("n1");
                 n1.receive({payload: "foo", topic: "bar"});
@@ -1484,13 +1483,13 @@ describe('function_unsafe node', () => {
                     try {
                         helper.log().called.should.be.true();
                         var logEvents = helper.log().args.filter(function (evt) {
-                            return evt[0].type == "function_unsafe";
+                            return evt[0].type == "function2";
                         });
                         logEvents.should.have.length(1);
                         var msg = logEvents[0][0];
                         msg.should.have.property('level', helper.log().ERROR);
                         msg.should.have.property('id', 'n1');
-                        msg.should.have.property('type', 'function_unsafe');
+                        msg.should.have.property('type', 'function2');
                         msg.should.have.property('msg', '{"a":1}');
                         done();
                     } catch (err) {
@@ -1504,7 +1503,7 @@ describe('function_unsafe node', () => {
     describe("init function", function() {
 
         it('should delay handling messages until init completes', function(done) {
-            var flow = [{id:"n1",type:"function_unsafe",wires:[["n2"]],initialize: `
+            var flow = [{id:"n1",type:"function2",wires:[["n2"]],initialize: `
                 return new Promise((resolve,reject) => {
                     setTimeout(resolve,200)
                 })`,
@@ -1534,7 +1533,7 @@ describe('function_unsafe node', () => {
         });
 
         it('should allow accessing node.id and node.name and sending message', function(done) {
-            var flow = [{id:"n1",name:"test-function", type:"function_unsafe",wires:[["n2"]],initialize:"setTimeout(function() { node.send({ topic: node.name, payload:node.id})},10)", func: ""},
+            var flow = [{id:"n1",name:"test-function", type:"function2",wires:[["n2"]],initialize:"setTimeout(function() { node.send({ topic: node.name, payload:node.id})},10)", func: ""},
             {id:"n2", type:"helper"}];
             helper.load(node, flow, function() {
                 var n1 = helper.getNode("n1");

@@ -1,4 +1,5 @@
-<script type="text/html" data-template-name="function_vm2">
+
+<script type="text/html" data-template-name="function2">
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="common.label.name"></span></label>
         <div style="display: inline-block; width: calc(100% - 105px)"><input type="text" id="node-input-name" data-i18n="[placeholder]common.label.name"></div>
@@ -54,7 +55,7 @@
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType('function_vm2',{
+    RED.nodes.registerType('function2',{
         color:"#fdd0a2",
         category: 'function',
         defaults: {
@@ -139,7 +140,7 @@
 
             RED.library.create({
                 url:"functions", // where to get the data from
-                type:"function_vm2", // the type of object the library is for
+                type:"function2", // the type of object the library is for
                 editor:this.editor, // the field name the main text body goes to
                 mode:"ace/mode/nrjavascript",
                 fields:[
