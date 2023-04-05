@@ -142,7 +142,7 @@ module.exports = function (RED) {
             Buffer: Buffer,
             Date: Date,
             RED: {
-                util: RED.util
+                util: { ...RED.util }
             },
             node: {
                 id: node.id,
