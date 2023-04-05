@@ -115,7 +115,7 @@ module.exports = function (RED) {
         // Check to see if the Function appears to call `node.done()`. If so,
         // we will assume it is well written and does actually call node.done().
         // Otherwise, we will call node.done() after the function returns regardless.
-        if (false && /node\.done\s*\(\s*\)/.test(functionText)) {
+        if (/node\.done\s*\(\s*\)/.test(functionText)) {
             // We have spotted the code contains `node.done`. It could be in a comment
             // so need to do the extra work to parse the AST and examine it properly.
             acornWalk.simple(acorn.parse(functionText, { ecmaVersion: "latest" }), {
