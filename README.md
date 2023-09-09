@@ -10,7 +10,7 @@ Provides an alternative implementation of node-red functio node, aiming to provi
 
 ## Speed
 
-"Benchmark" runned on a non-modified Node-Red `v3.0.2` with nodejs `18.14.1` on w10
+"Benchmark" runned on a non-modified Node-Red `v3.1.0` with nodejs `20.5.1` on w10
 
 On the hardware site my I've got an AMD r5 5600x, with 32GB of 3200MHz cl 16-18-18 memory
 
@@ -27,8 +27,8 @@ the benchmark is runned by creating an endless loop in a very short flow with ve
 
 | Implementation | Maximum msg/s reached |
 |:--------------:|:---------------------:|
-|custom Function2| ~250.000 msg/s |
-|Node-Red Function| ~37.000 msg/s |
+|custom Function2| ~210.000 msg/s |
+|Node-Red Function| ~32.000 msg/s |
 
 Note : to obtain such result, several messages have to be inserted (more than one click on the inject node)
 

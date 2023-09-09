@@ -6,9 +6,9 @@
         "test": "mocha"
     },
     "devDependencies": {
-        "mocha": "^8.3.0",
+        "mocha": "^10.2.0",
         "node-red": "^3.0.0",
-        "node-red-node-test-helper": "^0.2.7",
+        "node-red-node-test-helper": "^0.3.2",
         "should": "^13.2.3"
     },
     "author": "",
